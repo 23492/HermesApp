@@ -29,13 +29,7 @@ targets:
     dependencies:
       - package: MarkdownUI
       - package: Splash
-    scheme:
-      testTargets: []
-      configVariants:
-        - Debug
-        - Release
 
-# Platform variants for iOS
   HermesAppiOS:
     type: application
     platform: iOS
@@ -56,11 +50,7 @@ targets:
         CFBundleDisplayName: Hermes
         UILaunchStoryboardName: LaunchScreen
         UIApplicationSceneManifest:
-          UIApplicationSupportsMultipleScenes: NO
-          UISceneConfigurations:
-            UIWindowSceneSessionRoleApplication:
-              - UISceneConfigurationName: Default Configuration
-                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+          UIApplicationSupportsMultipleScenes: false
     dependencies:
       - package: MarkdownUI
       - package: Splash
@@ -93,6 +83,3 @@ fileGroups:
 options:
   minimumXcodeGenVersion: "2.40.0"
   generateEmptyDirectories: true
-  deploymentTarget:
-    macOS: "14.0"
-    iOS: "17.0"
