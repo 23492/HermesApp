@@ -1,0 +1,195 @@
+diff --git a/HermesApp/Features/Chat/ViewModels/ChatViewModel.swift b/HermesApp/Features/Chat/ViewModels/ChatViewModel.swift
+--- a/HermesApp/Features/Chat/ViewModels/ChatViewModel.swift
++++ b/HermesApp/Features/Chat/ViewModels/ChatViewModel.swift
+@@ -41,9 +41,7 @@ final class ChatViewModel: ObservableObject {
+     
+     deinit {
+         streamingTask?.cancel()
+-        Task {
+-            await cancellationToken.cancel()
+-        }
++        // cancellationToken.cancel() should be synchronous or handled differently
+     }
+     
+     // MARK: - Message Loading
+@@ -112,7 +110,7 @@ final class ChatViewModel: ObservableObject {
+             cancellationToken: cancellationToken
+         )
+         
+-        streamingTask = Task {
++        streamingTask = Task { @MainActor [weak self] in
++            guard let self = self else { return }
+             do {
+                 let stream = try await apiClient.sendMessage(
+                     request,
+@@ -413,9 +411,9 @@ final class StreamingService: ObservableObject {
+         model: String,
+         sessionId: String? = nil,
+-        onChunk: @escaping @Sendable (String) -> Void,
+-        onToolCall: @escaping @Sendable (ToolCall) -> Void,
+-        onComplete: @escaping @Sendable (Result<Void, Error>) -> Void
++        onChunk: @escaping @Sendable @MainActor (String) -> Void,
++        onToolCall: @escaping @Sendable @MainActor (ToolCall) -> Void,
++        onComplete: @escaping @Sendable @MainActor (Result<Void, Error>) -> Void
+     ) -> Task<Void, Never> {
+         let task = Task {
+             do {
+
+diff --git a/HermesApp/Features/Chat/Views/ChatView.swift b/HermesApp/Features/Chat/Views/ChatView.swift
+--- a/HermesApp/Features/Chat/Views/ChatView.swift
++++ b/HermesApp/Features/Chat/Views/ChatView.swift
+@@ -7,6 +7,7 @@ struct ChatView: View {
+     @State private var scrollToBottom = false
+     @State private var showingError = false
+     @State private var showingTypingIndicator = false
++    @State private var notificationObservers: [NSObjectProtocol] = []
+     
+     var body: some View {
+         VStack(spacing: 0) {
+@@ -49,6 +50,13 @@ struct ChatView: View {
+         .onAppear {
+             setupNotificationHandlers()
+         }
++        .onDisappear {
++            // Clean up notification observers to prevent memory leaks
++            for observer in notificationObservers {
++                NotificationCenter.default.removeObserver(observer)
++            }
++            notificationObservers.removeAll()
++        }
+     }
+     
+     // MARK: - Messages List
+@@ -114,16 +122,18 @@ struct ChatView: View {
+     private func setupNotificationHandlers() {
+         // Handle regenerate message notification
+-        NotificationCenter.default.addObserver(
++        let regenerateObserver = NotificationCenter.default.addObserver(
+             forName: .regenerateMessage,
+             object: nil,
+             queue: .main
+         ) { notification in
+-            Task {
++            Task { @MainActor in
+                 await viewModel.regenerateLastMessage()
+             }
+         }
++        notificationObservers.append(regenerateObserver)
+         
+         // Handle edit message notification
+-        NotificationCenter.default.addObserver(
++        let editObserver = NotificationCenter.default.addObserver(
+             forName: .editMessage,
+             object: nil,
+             queue: .main
+@@ -131,11 +141,12 @@ struct ChatView: View {
+             guard let messageId = notification.userInfo?["messageId"] as? UUID,
+                   let newContent = notification.userInfo?["newContent"] as? String else { return }
+             
+-            Task {
++            Task { @MainActor in
+                 await viewModel.editMessage(id: messageId, newContent: newContent)
+             }
+         }
++        notificationObservers.append(editObserver)
+     }
+ }
+ 
+diff --git a/HermesApp/Features/Chat/MarkdownComponents/CodeBlockView.swift b/HermesApp/Features/Chat/MarkdownComponents/CodeBlockView.swift
+--- a/HermesApp/Features/Chat/MarkdownComponents/CodeBlockView.swift
++++ b/HermesApp/Features/Chat/MarkdownComponents/CodeBlockView.swift
+@@ -201,8 +201,9 @@ struct CodeBlockView: View {
+         }
+         
+         // Reset after 2 seconds
+-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+-            withAnimation {
++        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
++            guard let self = self else { return }
++            withAnimation {
+                 isCopied = false
+             }
+         }
+@@ -223,33 +224,6 @@ struct CustomCodeBlockStyle: BlockStyle {
+     }
+ }
+ 
+-// MARK: - Inline Code View
+-
+-/// A view for displaying inline code
+-struct InlineCodeView: View {
+-    let code: String
+-    
+-    @Environment(\.colorScheme) private var colorScheme
+-    
+-    var body: some View {
+-        Text(code)
+-            .font(.system(.body, design: .monospaced))
+-            .fontWeight(.medium)
+-            .padding(.horizontal, 6)
+-            .padding(.vertical, 2)
+-            .background(
+-                colorScheme == .dark 
+-                    ? Color.orange.opacity(0.15)
+-                    : Color.orange.opacity(0.1)
+-            )
+-            .foregroundStyle(
+-                colorScheme == .dark
+-                    ? Color.orange.opacity(0.9)
+-                    : Color.orange.opacity(0.8)
+-            )
+-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+-    }
+-}
+-
+ // MARK: - Preview
+ 
+ #Preview {
+diff --git a/HermesApp/Features/Chat/Views/MessageBubbleView.swift b/HermesApp/Features/Chat/Views/MessageBubbleView.swift
+--- a/HermesApp/Features/Chat/Views/MessageBubbleView.swift
++++ b/HermesApp/Features/Chat/Views/MessageBubbleView.swift
+@@ -61,15 +61,15 @@ struct MessageBubble: View {
+                         .stroke(borderColor, lineWidth: showActions ? 2 : 0)
+                         .animation(.easeInOut(duration: 0.2), value: showActions)
+                 )
+                 .contentShape(Rectangle())
+-                .onTapGesture {
++                .onTapGesture { [self] in
+                     withAnimation {
+-                        showActions.toggle()
++                        self.showActions.toggle()
+                     }
+                 }
+-                .onLongPressGesture {
++                .onLongPressGesture { [self] in
+                     withAnimation {
+-                        showActions = true
++                        self.showActions = true
+                     }
+                 }
+             }
+
+diff --git a/HermesApp/Features/Chat/Views/MessageInputView.swift b/HermesApp/Features/Chat/Views/MessageInputView.swift
+--- a/HermesApp/Features/Chat/Views/MessageInputView.swift
++++ b/HermesApp/Features/Chat/Views/MessageInputView.swift
+@@ -146,8 +146,10 @@ struct AutoResizingTextEditor: View {
+     private func calculateHeight(from geometry: GeometryProxy) {
+         // Calculate height based on content
+         let textHeight = text.boundingRect(
+-            with: CGSize(width: geometry.size.width - 16, height: .greatestFiniteMagnitude),
++            with: CGSize(width: max(geometry.size.width - 16, 0), height: .greatestFiniteMagnitude),
+             options: [.usesLineFragmentOrigin, .usesFontLeading],
+             attributes: [.font: UIFont.preferredFont(forTextStyle: .body)],
+             context: nil
+@@ -163,6 +165,11 @@ struct AutoResizingTextEditor: View {
+     
+     private func checkForMention() {
+         // Check for @ mention
++        // Avoid processing if text is too short
++        guard text.count > 0 else {
++            onMentionDetected?(nil)
++            return
++        }
+         if let lastAt = text.lastIndex(of: "@") {
+             let afterAt = text.index(after: lastAt)
+             let query = String(text[afterAt...])
