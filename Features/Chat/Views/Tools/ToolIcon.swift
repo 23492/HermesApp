@@ -72,12 +72,12 @@ struct ToolIconWithBadge: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 12))
                 .foregroundStyle(.green)
-                .background(Circle().fill(Color(.systemBackground)))
+                .background(Circle().fill(Color.systemBackground))
         case .error:
             Image(systemName: "xmark.circle.fill")
                 .font(.system(size: 12))
                 .foregroundStyle(.red)
-                .background(Circle().fill(Color(.systemBackground)))
+                .background(Circle().fill(Color.systemBackground))
         case .count(let count):
             Text("\(count)")
                 .font(.system(size: 10, weight: .bold))

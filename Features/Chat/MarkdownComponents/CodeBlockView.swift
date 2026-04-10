@@ -8,16 +8,16 @@ import Splash
 struct CodeBlockView: View {
     let code: String
     let language: String?
-    
+
     @State private var isCopied = false
     @State private var isExpanded = true
     @Environment(\.colorScheme) private var colorScheme
-    
+
     private var displayLanguage: String {
         language?.capitalized ?? "Plain Text"
     }
-    
-    private var languageColor: Color {
+
+    private var languageColor: SwiftUI.Color {
         switch language?.lowercased() {
         case "swift":
             return .orange
@@ -53,7 +53,7 @@ struct CodeBlockView: View {
             return .secondary
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Header with language badge and actions
@@ -63,7 +63,7 @@ struct CodeBlockView: View {
                     Circle()
                         .fill(languageColor)
                         .frame(width: 8, height: 8)
-                    
+
                     Text(displayLanguage)
                         .font(.caption)
                         .fontWeight(.medium)
@@ -73,9 +73,9 @@ struct CodeBlockView: View {
                 .padding(.vertical, 4)
                 .background(.ultraThinMaterial)
                 .clipShape(Capsule())
-                
+
                 Spacer()
-                
+
                 // Action buttons
                 HStack(spacing: 8) {
                     // Expand/collapse button
@@ -88,11 +88,11 @@ struct CodeBlockView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(width: 28, height: 28)
-                            .background(Color.secondary.opacity(0.1))
+                            .background(SwiftUI.Color.secondary.opacity(0.1))
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    
+
                     // Copy button
                     Button {
                         copyToClipboard()
@@ -107,7 +107,7 @@ struct CodeBlockView: View {
                         .foregroundStyle(isCopied ? .green : .primary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(isCopied ? Color.green.opacity(0.1) : Color.secondary.opacity(0.1))
+                        .background(isCopied ? SwiftUI.Color.green.opacity(0.1) : SwiftUI.Color.secondary.opacity(0.1))
                         .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -116,10 +116,10 @@ struct CodeBlockView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(codeBackground.opacity(0.5))
-            
+
             Divider()
-                .background(Color.secondary.opacity(0.2))
-            
+                .background(SwiftUI.Color.secondary.opacity(0.2))
+
             // Code content
             if isExpanded {
                 ScrollView(.horizontal, showsIndicators: true) {
@@ -134,60 +134,52 @@ struct CodeBlockView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                .stroke(SwiftUI.Color.secondary.opacity(0.2), lineWidth: 1)
         )
     }
-    
-    private var codeBackground: Color {
-        colorScheme == .dark 
-            ? Color(.systemGray6).opacity(0.8)
-            : Color(.systemGray6)
+
+    private var codeBackground: SwiftUI.Color {
+        colorScheme == .dark
+            ? SwiftUI.Color.systemGray6.opacity(0.8)
+            : SwiftUI.Color.systemGray6
     }
-    
+
     @ViewBuilder
     private var highlightedCode: some View {
         if let language = language?.lowercased(), language == "swift" {
-            // Use Splash for Swift highlighting
             swiftHighlightedCode
         } else {
-            // Use MarkdownUI's basic highlighting for other languages
             Markdown("```\(language ?? "")\n\(code)\n```")
                 .markdownTheme(codeOnlyTheme)
         }
     }
-    
+
     @ViewBuilder
     private var swiftHighlightedCode: some View {
-        let theme: Splash.Theme = colorScheme == .dark 
+        let theme: Splash.Theme = colorScheme == .dark
             ? .wwdc17(withFont: .init(size: 13))
             : .sunset(withFont: .init(size: 13))
-        
+
         let highlighter = SyntaxHighlighter(format: AttributedStringOutputFormat(theme: theme))
-        
-        do {
-            let highlighted = try highlighter.highlight(code)
-            Text(highlighted)
-                .font(.system(size: 13, design: .monospaced))
-                .textSelection(.enabled)
-        } catch {
-            Text(code)
-                .font(.system(size: 13, design: .monospaced))
-                .textSelection(.enabled)
-        }
+        let highlighted = highlighter.highlight(code)
+
+        Text(AttributedString(highlighted))
+            .font(.system(size: 13, design: .monospaced))
+            .textSelection(.enabled)
     }
-    
-    private var codeOnlyTheme: Theme {
-        Theme()
+
+    private var codeOnlyTheme: MarkdownUI.Theme {
+        MarkdownUI.Theme()
             .code {
                 FontFamilyVariant(.monospaced)
-                FontSize(13)
+                MarkdownUI.FontSize(13)
             }
             .codeBlock { configuration in
                 configuration.label
                     .textSelection(.enabled)
             }
     }
-    
+
     private func copyToClipboard() {
         #if os(iOS)
         UIPasteboard.general.string = code
@@ -195,12 +187,11 @@ struct CodeBlockView: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(code, forType: .string)
         #endif
-        
+
         withAnimation {
             isCopied = true
         }
-        
-        // Reset after 2 seconds
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             withAnimation {
                 isCopied = false
@@ -209,61 +200,18 @@ struct CodeBlockView: View {
     }
 }
 
-// MARK: - Custom Code Block Style for MarkdownUI
-
-/// A custom code block style that uses our CodeBlockView
-struct CustomCodeBlockStyle: BlockStyle {
-    @Environment(\.colorScheme) private var colorScheme
-    
-    func makeBody(configuration: Configuration) -> some View {
-        let language = configuration.language
-        let code = configuration.content
-        
-        CodeBlockView(code: code, language: language)
-    }
-}
-
-// MARK: - Inline Code View
-
-/// A view for displaying inline code
-struct InlineCodeView: View {
-    let code: String
-    
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var body: some View {
-        Text(code)
-            .font(.system(.body, design: .monospaced))
-            .fontWeight(.medium)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(
-                colorScheme == .dark 
-                    ? Color.orange.opacity(0.15)
-                    : Color.orange.opacity(0.1)
-            )
-            .foregroundStyle(
-                colorScheme == .dark
-                    ? Color.orange.opacity(0.9)
-                    : Color.orange.opacity(0.8)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-    }
-}
-
 // MARK: - Preview
 
 #Preview {
     ScrollView {
         VStack(spacing: 20) {
-            // Swift code block
             CodeBlockView(
                 code: """
                 struct User: Codable {
                     let id: UUID
                     let name: String
                     let email: String
-                    
+
                     func greet() -> String {
                         return "Hello, \\(name)!"
                     }
@@ -271,28 +219,23 @@ struct InlineCodeView: View {
                 """,
                 language: "swift"
             )
-            
-            // JavaScript code block
+
             CodeBlockView(
                 code: """
                 function calculateSum(a, b) {
                     return a + b;
                 }
-                
+
                 const result = calculateSum(5, 3);
                 console.log(result); // 8
                 """,
                 language: "javascript"
             )
-            
-            // Plain text
+
             CodeBlockView(
                 code: "This is some plain text without syntax highlighting",
                 language: nil
             )
-            
-            // Inline code
-            InlineCodeView(code: "print()")
         }
         .padding()
     }

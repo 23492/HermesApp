@@ -37,7 +37,7 @@ struct APISettingsView: View {
     @State private var apiKey: String = ""
     @State private var testStatus: TestStatus = .idle
     
-    enum TestStatus {
+    enum TestStatus: Equatable {
         case idle
         case testing
         case success
@@ -159,8 +159,9 @@ struct APISettingsView: View {
 
 struct AppearanceSettingsView: View {
     @Environment(AppState.self) private var appState
-    
+
     var body: some View {
+        @Bindable var appState = appState
         Form {
             Section("Theme") {
                 Picker("Appearance", selection: $appState.theme) {
@@ -194,8 +195,9 @@ struct AppearanceSettingsView: View {
 struct GeneralSettingsView: View {
     @Environment(AppState.self) private var appState
     @State private var showingResetConfirmation = false
-    
+
     var body: some View {
+        @Bindable var appState = appState
         Form {
             Section("Chat Behavior") {
                 Toggle("Enable Streaming", isOn: $appState.enableStreaming)
@@ -286,7 +288,9 @@ struct APIConfigurationView: View {
         Form {
             Section("Server") {
                 TextField("Base URL", text: $baseURL)
-                    .autocapitalization(.none)
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                     .onAppear {
                         baseURL = appState.apiConfiguration.baseURL

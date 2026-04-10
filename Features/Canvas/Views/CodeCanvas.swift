@@ -23,7 +23,7 @@ struct CodeCanvas: View {
                 }
             }
         }
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .onAppear {
             isTextEditorFocused = viewModel.isEditing
         }
@@ -65,7 +65,7 @@ struct CodeCanvas: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(.secondarySystemBackground))
+        .background(Color.secondarySystemBackground)
     }
     
     // MARK: - Code Display View (Read-only)
@@ -77,7 +77,7 @@ struct CodeCanvas: View {
                     // Line numbers
                     lineNumberView(for: viewModel.selectedItem?.content ?? "")
                         .frame(width: 50)
-                        .background(Color(.secondarySystemBackground).opacity(0.5))
+                        .background(Color.secondarySystemBackground.opacity(0.5))
                     
                     // Code content
                     Text(viewModel.selectedItem?.content ?? "")
@@ -101,7 +101,7 @@ struct CodeCanvas: View {
                     // Line numbers
                     lineNumberView(for: viewModel.editedContent)
                         .frame(width: 50)
-                        .background(Color(.secondarySystemBackground).opacity(0.5))
+                        .background(Color.secondarySystemBackground.opacity(0.5))
                     
                     // Text editor
                     TextEditor(text: $viewModel.editedContent)
@@ -226,7 +226,7 @@ struct SyntaxHighlightedCodeView: View {
                 // Line numbers
                 LineNumberView(code: code)
                     .frame(width: 50)
-                    .background(Color(.secondarySystemBackground).opacity(0.5))
+                    .background(Color.secondarySystemBackground.opacity(0.5))
                 
                 // Highlighted code
                 highlightedCode
@@ -284,7 +284,7 @@ struct CodeEditorView: View {
                     // Line numbers
                     LineNumberView(code: text)
                         .frame(width: 50)
-                        .background(Color(.secondarySystemBackground).opacity(0.5))
+                        .background(Color.secondarySystemBackground.opacity(0.5))
                     
                     // Editor
                     TextEditor(text: $text)
@@ -330,7 +330,7 @@ struct DiffCanvasView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color(.secondarySystemBackground))
+            .background(Color.secondarySystemBackground)
             
             // Diff content
             ScrollView([.horizontal, .vertical]) {

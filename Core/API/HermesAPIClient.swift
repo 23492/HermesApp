@@ -140,17 +140,18 @@ actor HermesAPIClient: HermesAPIClientProtocol {
         }
         
         urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        
-        return AsyncStream { [weak self] continuation in
+
+        let finalRequest = urlRequest
+        return AsyncStream { [weak self] (continuation: AsyncStream<ChatChunk>.Continuation) in
             guard let self = self else {
                 continuation.finish()
                 return
             }
-            
-            let task = Task {
+
+            let task = Task { @Sendable in
                 do {
                     try await self.performStreamRequest(
-                        urlRequest: urlRequest,
+                        urlRequest: finalRequest,
                         cancellationToken: cancellationToken,
                         continuation: continuation
                     )
@@ -203,16 +204,19 @@ actor HermesAPIClient: HermesAPIClientProtocol {
     
     func streamEvents(runId: String) async throws -> AsyncStream<RunEvent> {
         let url = try buildURL(endpoint: "/runs/\(runId)/events")
-        var urlRequest = try buildRequest(url: url, method: "GET")
-        urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        
-        return AsyncStream { [weak self] continuation in
+        let urlRequest: URLRequest = {
+            var req = try! self.buildRequest(url: url, method: "GET")
+            req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            return req
+        }()
+
+        return AsyncStream { [weak self] (continuation: AsyncStream<RunEvent>.Continuation) in
             guard let self = self else {
                 continuation.finish()
                 return
             }
-            
-            let task = Task {
+
+            let task = Task { @Sendable in
                 do {
                     try await self.performRunEventStream(
                         urlRequest: urlRequest,
@@ -473,10 +477,8 @@ actor HermesAPIClient: HermesAPIClientProtocol {
         case "ask_user.question":
             if let question = json["question"] as? String {
                 // Store question in metadata for view model to handle
-                var choices: [Choice] = []
-                if let delta = createQuestionDelta(question: question, json: json) {
-                    choices = [Choice(index: 0, message: nil, delta: delta, finishReason: nil)]
-                }
+                let delta = createQuestionDelta(question: question, json: json)
+                let choices = [Choice(index: 0, message: nil, delta: delta, finishReason: nil)]
                 
                 return ChatChunk(
                     id: UUID().uuidString,
@@ -703,10 +705,12 @@ actor HermesAPIClient: HermesAPIClientProtocol {
                     ),
                     finishReason: nil
                 )
-            ]
+            ],
+            reasoningContent: nil,
+            eventType: nil
         )
     }
-    
+
     enum ToolEvent {
         case started(name: String, preview: String, toolCallId: String?, arguments: String?)
         case completed(name: String, output: String, duration: Double?, toolCallId: String?)
@@ -845,7 +849,9 @@ extension HermesAPIClient {
                 
                 // Don't retry on client errors or cancellations
                 switch error {
-                case .cancelled, .httpError(let code, _) where code < 500:
+                case .cancelled:
+                    throw error
+                case .httpError(let code, _) where code < 500:
                     throw error
                 case .rateLimited(let retryAfter):
                     let waitTime = retryAfter ?? delay * pow(2.0, Double(attempt))

@@ -22,7 +22,7 @@ struct DocumentCanvas: View {
                 }
             }
         }
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .onAppear {
             isTextEditorFocused = viewModel.isEditing
         }
@@ -84,7 +84,7 @@ struct DocumentCanvas: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(.secondarySystemBackground))
+        .background(Color.secondarySystemBackground)
     }
     
     // MARK: - Document Display View
@@ -92,7 +92,7 @@ struct DocumentCanvas: View {
     private var documentDisplayView: some View {
         ScrollView {
             if let content = viewModel.selectedItem?.content {
-                MarkdownContentView(content: content)
+                MarkdownContentView(content: content, isAssistant: true)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -153,20 +153,6 @@ struct DocumentCanvas: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(40)
-    }
-}
-
-// MARK: - Markdown Content View
-
-struct MarkdownContentView: View {
-    let content: String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // For now, display as formatted text
-            // In production, use a proper Markdown renderer
-            FormattedMarkdownView(content: content)
-        }
     }
 }
 
@@ -426,7 +412,7 @@ struct CodeBlockContent: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(Color(.secondarySystemBackground).opacity(0.5))
+                .background(Color.secondarySystemBackground.opacity(0.5))
             }
             
             // Code
@@ -437,9 +423,9 @@ struct CodeBlockContent: View {
                     .padding(12)
                     .textSelection(.enabled)
             }
-            .background(Color(.secondarySystemBackground).opacity(0.3))
+            .background(Color.secondarySystemBackground.opacity(0.3))
         }
-        .background(Color(.secondarySystemBackground).opacity(0.2))
+        .background(Color.secondarySystemBackground.opacity(0.2))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
@@ -494,7 +480,8 @@ struct NumberedListView: View {
     viewModel.addItem(CanvasItem(
         type: .document,
         title: "README.md",
-        content: """# Sample Document
+        content: """
+# Sample Document
 
 This is a **sample** markdown document.
 

@@ -311,7 +311,7 @@ struct ToolProgressIndicator: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
     
@@ -359,7 +359,7 @@ struct ToolProgressIndicator: View {
         }
         .padding()
     }
-    .background(Color(.systemGray5))
+    .background(Color.systemGray5)
 }
 
 #Preview("Mini Status & Progress") {

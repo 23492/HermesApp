@@ -61,7 +61,7 @@ extension HermesAPIClient {
 // MARK: - Performance Logging
 
 enum PerformanceLog {
-    private static var timings: [String: Date] = [:]
+    nonisolated(unsafe) private static var timings: [String: Date] = [:]
     
     static func start(_ identifier: String) {
         timings[identifier] = Date()

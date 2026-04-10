@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Dependency Injection Container
 
@@ -70,9 +71,8 @@ extension DIContainer: ViewModelFactory {}
 
 // MARK: - Environment Injection
 
-private struct DIContainerKey: EnvironmentKey {
-    @MainActor
-    static let defaultValue: DIContainer = .shared
+private struct DIContainerKey: @preconcurrency EnvironmentKey {
+    @MainActor static let defaultValue: DIContainer = .shared
 }
 
 extension EnvironmentValues {

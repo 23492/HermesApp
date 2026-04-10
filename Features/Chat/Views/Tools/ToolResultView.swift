@@ -163,7 +163,7 @@ struct ToolResultView: View {
     }
     
     private var outputBackground: Color {
-        result.isError ? Color.red.opacity(0.05) : Color(.systemGray6)
+        result.isError ? Color.red.opacity(0.05) : Color.systemGray6
     }
     
     private var borderColor: Color {
@@ -234,7 +234,7 @@ struct ToolResultsSummary: View {
                 .foregroundStyle(.secondary)
         }
         .padding(10)
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }

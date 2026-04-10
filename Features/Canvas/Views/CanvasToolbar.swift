@@ -24,7 +24,7 @@ struct CanvasToolbar: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .overlay(
             Rectangle()
                 .frame(height: 0.5)
@@ -48,7 +48,7 @@ struct CanvasToolbar: View {
                                 item.title,
                                 systemImage: item.type.icon
                             )
-                            .foregroundStyle(item.id == viewModel.selectedItemId ? .accentColor : .primary)
+                            .foregroundStyle(item.id == viewModel.selectedItemId ? Color.accentColor : Color.primary)
                         }
                     }
                 } label: {
@@ -315,7 +315,7 @@ struct CompactCanvasToolbar: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
     }
 }
 
@@ -359,7 +359,7 @@ struct CanvasStatusBar: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .background(Color(.secondarySystemBackground))
+        .background(Color.secondarySystemBackground)
     }
 }
 

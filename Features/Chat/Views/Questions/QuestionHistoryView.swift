@@ -179,7 +179,7 @@ struct QuestionHistoryList: View {
             }
         }
         .padding(12)
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
@@ -199,7 +199,8 @@ struct PendingQuestionBanner: View {
                 Image(systemName: "questionmark.bubble.fill")
                     .font(.title3)
                     .foregroundStyle(.orange)
-                    .symbolEffect(.bounce, options: .repeating, isActive: isPulsing)
+                    .opacity(isPulsing ? 0.5 : 1.0)
+                    .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isPulsing)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("AI needs your input")
@@ -268,7 +269,7 @@ struct QuestionResponseCard: View {
             }
         }
         .padding(10)
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)

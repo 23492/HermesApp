@@ -28,7 +28,7 @@ struct CanvasContainer<Content: View>: View {
             maxSplitPosition: viewModel.maxChatWidth,
             layout: viewModel.layout,
             content: content,
-            canvas: canvasView
+            canvas: { canvasView }
         )
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: viewModel.layout)
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: viewModel.isVisible)
@@ -52,7 +52,7 @@ struct CanvasContainer<Content: View>: View {
                 // Status bar
                 CanvasStatusBar(viewModel: viewModel)
             }
-            .background(Color(.systemBackground))
+            .background(Color.systemBackground)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
@@ -115,7 +115,7 @@ struct CanvasContainer<Content: View>: View {
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
             RoundedRectangle(cornerRadius: 8)
@@ -174,7 +174,7 @@ struct CanvasOverlay<Content: View>: View {
                 }
                 .frame(width: min(geometry.size.width * 0.6, 600))
                 .background(
-                    Color(.systemBackground)
+                    Color.systemBackground
                         .shadow(color: .black.opacity(0.2), radius: 16, x: -4, y: 0)
                 )
             }
@@ -234,7 +234,7 @@ struct FloatingCanvasButton: View {
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(Color(.systemBackground))
+                    .fill(Color.systemBackground)
                     .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
             )
             .overlay(
@@ -264,7 +264,7 @@ struct CanvasToggleButton: View {
                 Text("Canvas")
                     .font(.system(size: 12, weight: .medium))
             }
-            .foregroundStyle(viewModel.isVisible ? .accentColor : .secondary)
+            .foregroundStyle(viewModel.isVisible ? Color.accentColor : Color.secondary)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(

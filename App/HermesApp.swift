@@ -38,42 +38,36 @@ struct HermesApp: App {
 
 // MARK: - App Delegate
 
+#if os(iOS)
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Configure appearance
         configureAppearance()
         return true
     }
-    
+
     private func configureAppearance() {
-        // Configure navigation bar appearance
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = .systemBackground
-        
+
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 }
+#endif
 
 // MARK: - Dependency Injection Environment Keys
 
-private struct ConversationRepositoryKey: EnvironmentKey {
-    @MainActor
-    static var defaultValue: ConversationRepositoryProtocol {
-        ConversationRepository()
-    }
+private struct ConversationRepositoryKey: @preconcurrency EnvironmentKey {
+    @MainActor static var defaultValue: ConversationRepositoryProtocol = ConversationRepository()
 }
 
-private struct MessageRepositoryKey: EnvironmentKey {
-    @MainActor
-    static var defaultValue: MessageRepositoryProtocol {
-        MessageRepository()
-    }
+private struct MessageRepositoryKey: @preconcurrency EnvironmentKey {
+    @MainActor static var defaultValue: MessageRepositoryProtocol = MessageRepository()
 }
 
 extension EnvironmentValues {

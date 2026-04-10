@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - API Request Models
 
-struct ChatRequest: Codable {
+struct ChatRequest: Codable, Sendable {
     let model: String
     let messages: [ChatMessage]
     let stream: Bool
@@ -27,7 +27,7 @@ struct ChatRequest: Codable {
     }
 }
 
-struct ChatMessage: Codable {
+struct ChatMessage: Codable, Sendable {
     let role: String // "user", "assistant", "system", "tool"
     let content: String
     let name: String? // For tool messages
@@ -49,26 +49,26 @@ struct ChatMessage: Codable {
     }
 }
 
-struct ToolDefinition: Codable {
+struct ToolDefinition: Codable, Sendable {
     let type: String
     let function: ToolFunction
 }
 
-struct ToolFunction: Codable {
+struct ToolFunction: Codable, Sendable {
     let name: String
     let description: String
     let parameters: [String: AnyCodable]?
 }
 
-struct APIToolCall: Codable {
+struct APIToolCall: Codable, Sendable {
     let id: String
     let type: String
-    let function: ToolFunctionCall
+    var function: ToolFunctionCall
 }
 
-struct ToolFunctionCall: Codable {
+struct ToolFunctionCall: Codable, Sendable {
     let name: String
-    let arguments: String
+    var arguments: String
 }
 
 // MARK: - API Response Models
@@ -201,7 +201,7 @@ enum RunEvent: Codable {
 
 // MARK: - Canvas Models
 
-struct CanvasItem: Codable, Identifiable {
+struct CanvasItem: Codable, Identifiable, Equatable {
     var id: UUID
     var type: CanvasType
     var title: String
@@ -241,7 +241,7 @@ enum CanvasType: String, Codable {
 
 // MARK: - Helper Types
 
-struct AnyCodable: Codable {
+struct AnyCodable: Codable, @unchecked Sendable {
     let value: Any
     
     init(_ value: Any) {
