@@ -204,10 +204,12 @@ import Combine
 
 extension Publisher {
     func asyncMap<T>(
-        _ transform: @escaping (Output) async throws -> T
-    ) -> Publishers.FlatMap<Future<T, Error>, Self> {
+        _ transform: @escaping @Sendable (Output) async throws -> T
+    ) -> Publishers.FlatMap<Future<T, Error>, Self> where Output: Sendable {
         flatMap { value in
             Future { promise in
+                nonisolated(unsafe) let promise = promise
+                nonisolated(unsafe) let value = value
                 Task {
                     do {
                         let output = try await transform(value)

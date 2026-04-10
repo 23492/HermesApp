@@ -225,5 +225,5 @@ struct StreamingIndicator: View {
         )
     }
     .padding()
-    .background(Color(.systemBackground))
+    .background(Color.systemBackground)
 }

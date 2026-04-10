@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Chat View
 
 struct ChatView: View {
-    @Bindable var viewModel: ChatViewModel
+    @ObservedObject var viewModel: ChatViewModel
     @Environment(AppState.self) private var appState
     @StateObject private var canvasViewModel = CanvasViewModel()
     @State private var scrollToBottom = false
@@ -116,7 +116,7 @@ struct ChatView: View {
             HStack(spacing: 8) {
                 Image(systemName: "square.fill")
                     .font(.caption)
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
                 
                 Text("\(canvasViewModel.items.count) canvas item\(canvasViewModel.items.count == 1 ? "" : "s")")
                     .font(.subheadline)
@@ -137,7 +137,7 @@ struct ChatView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color(.secondarySystemBackground))
+        .background(Color.secondarySystemBackground)
         .overlay(
             Rectangle()
                 .frame(height: 0.5)
@@ -260,7 +260,7 @@ struct TypingIndicatorBubble: View {
                 TypingIndicator()
             }
             .padding(12)
-            .background(Color(.systemGray6))
+            .background(Color.systemGray6)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             
             Spacer()
@@ -272,7 +272,7 @@ struct TypingIndicatorBubble: View {
 // MARK: - Chat Toolbar Menu
 
 struct ChatToolbarMenu: View {
-    @Bindable var viewModel: ChatViewModel
+    @ObservedObject var viewModel: ChatViewModel
     @ObservedObject var canvasViewModel: CanvasViewModel
     @State private var showingSettings = false
     @State private var showingClearConfirmation = false
@@ -439,7 +439,7 @@ struct MessageContextMenu: View {
 // MARK: - Chat Settings Sheet
 
 struct ChatSettingsSheet: View {
-    @Bindable var viewModel: ChatViewModel
+    @ObservedObject var viewModel: ChatViewModel
     @ObservedObject var canvasViewModel: CanvasViewModel
     @Environment(\.dismiss) private var dismiss
     
@@ -512,7 +512,9 @@ struct ChatSettingsSheet: View {
                 }
             }
             .navigationTitle("Chat Settings")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {

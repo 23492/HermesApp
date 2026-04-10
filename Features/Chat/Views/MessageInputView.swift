@@ -71,7 +71,7 @@ struct MessageInputView: View {
                     .focused($isFocused)
                 }
                 .frame(height: textEditorHeight)
-                .background(Color(.systemGray6))
+                .background(Color.systemGray6)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 
                 // Action buttons
@@ -119,7 +119,7 @@ struct AutoResizingTextEditor: View {
     let minHeight: CGFloat
     let maxHeight: CGFloat
     @Binding var currentHeight: CGFloat
-    var onMentionDetected: ((String) -> Void)?
+    var onMentionDetected: ((String?) -> Void)?
     
     @State private var isCheckingForMention = false
     
@@ -145,10 +145,15 @@ struct AutoResizingTextEditor: View {
     
     private func calculateHeight(from geometry: GeometryProxy) {
         // Calculate height based on content
+        #if os(iOS)
+        let font = UIFont.preferredFont(forTextStyle: .body)
+        #elseif os(macOS)
+        let font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        #endif
         let textHeight = text.boundingRect(
             with: CGSize(width: geometry.size.width - 16, height: .greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading],
-            attributes: [.font: UIFont.preferredFont(forTextStyle: .body)],
+            attributes: [.font: font],
             context: nil
         ).height + 20
         
@@ -206,7 +211,7 @@ struct SendButton: View {
                 .font(.title3)
                 .fontWeight(.semibold)
                 .frame(width: 44, height: 44)
-                .background(isEnabled ? Color.accentColor : Color(.systemGray4))
+                .background(isEnabled ? Color.accentColor : Color.systemGray4)
                 .foregroundStyle(isEnabled ? .white : .secondary)
                 .clipShape(Circle())
         }
@@ -273,7 +278,7 @@ struct ModelMentionSuggestions: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(Color.accentColor.opacity(0.1))
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
                         .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -338,7 +343,9 @@ struct ImagePickerPlaceholder: View {
             }
             .padding()
             .navigationTitle("Attach Image")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -378,7 +385,7 @@ struct SimpleMessageInputView: View {
                 .lineLimit(1...5)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color(.systemGray6))
+                .background(Color.systemGray6)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             
             // Send/Cancel button
@@ -398,7 +405,7 @@ struct SimpleMessageInputView: View {
                         .font(.title3)
                         .fontWeight(.semibold)
                         .frame(width: 36, height: 36)
-                        .background(canSend ? Color.accentColor : Color(.systemGray4))
+                        .background(canSend ? Color.accentColor : Color.systemGray4)
                         .foregroundStyle(canSend ? .white : .secondary)
                         .clipShape(Circle())
                 }
@@ -450,7 +457,7 @@ struct MacMessageInputView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(Color.separator, lineWidth: 1)
+                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
                     )
                     .onChange(of: text) { _ in
                         checkForMention()

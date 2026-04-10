@@ -76,7 +76,7 @@ struct ResizableDivider: View {
             
             // Drag handle indicator
             Circle()
-                .fill(Color(.systemBackground))
+                .fill(Color.systemBackground)
                 .frame(width: 24, height: 24)
                 .shadow(color: .black.opacity(0.15), radius: 2, x: 0, y: 1)
                 .overlay(

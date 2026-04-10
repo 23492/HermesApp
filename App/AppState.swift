@@ -178,9 +178,8 @@ enum FontSize: String, CaseIterable, Identifiable {
 
 // MARK: - Environment Key
 
-private struct AppStateKey: EnvironmentKey {
-    @MainActor
-    static let defaultValue = AppState()
+private struct AppStateKey: @preconcurrency EnvironmentKey {
+    @MainActor static let defaultValue = AppState()
 }
 
 extension EnvironmentValues {

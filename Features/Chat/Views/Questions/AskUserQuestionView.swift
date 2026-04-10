@@ -106,7 +106,7 @@ struct AskUserQuestionView: View {
             Image(systemName: "person.fill.questionmark")
                 .font(.title3)
                 .foregroundStyle(.orange)
-                .symbolEffect(.bounce, options: .repeating)
+                .symbolEffect(.pulse)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("AI needs your input")
@@ -169,7 +169,7 @@ struct AskUserQuestionView: View {
                 .scrollContentBackground(.hidden)
                 .padding(10)
                 .frame(minHeight: 80, maxHeight: 150)
-                .background(Color(.systemBackground))
+                .background(Color.systemBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -438,7 +438,7 @@ struct InlineQuestionView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(Color(.systemBackground))
+                .background(Color.systemBackground)
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()
@@ -470,13 +470,13 @@ struct CompactTextInput: View {
             } label: {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(text.isEmpty ? .secondary.opacity(0.4) : .orange)
+                    .foregroundStyle(text.isEmpty ? Color.secondary.opacity(0.4) : Color.orange)
             }
             .buttonStyle(.plain)
             .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding(10)
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
@@ -548,21 +548,23 @@ struct FlowLayout: Layout {
             
             // Confirm question
             AskUserQuestionView(
-                question: "Should I proceed with deleting this file?",
-                questionType: .confirm
-            ),
-            onSubmit: { _ in },
-            onDismiss: {}
+                question: AskUserQuestion(
+                    question: "Should I proceed with deleting this file?",
+                    questionType: .confirm
+                ),
+                onSubmit: { _ in },
+                onDismiss: {}
             )
-            
+
             // Choice question
             AskUserQuestionView(
-                question: "Which programming language would you prefer?",
-                questionType: .choice,
-                options: ["Swift", "Python", "JavaScript", "Rust", "Go"]
-            ),
-            onSubmit: { _ in },
-            onDismiss: {}
+                question: AskUserQuestion(
+                    question: "Which programming language would you prefer?",
+                    questionType: .choice,
+                    options: ["Swift", "Python", "JavaScript", "Rust", "Go"]
+                ),
+                onSubmit: { _ in },
+                onDismiss: {}
             )
             
             // Inline question

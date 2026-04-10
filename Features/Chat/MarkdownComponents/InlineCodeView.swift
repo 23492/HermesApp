@@ -87,7 +87,7 @@ struct InlineCodeBadge: View {
                 ? Color.accentColor.opacity(0.15)
                 : Color.accentColor.opacity(0.1)
         )
-        .foregroundStyle(.accent)
+        .foregroundStyle(Color.accentColor)
         .clipShape(Capsule())
     }
 }

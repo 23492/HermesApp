@@ -18,7 +18,7 @@ struct HermesCommands: Commands {
             .keyboardShortcut("n", modifiers: .command)
             
             Button("New Window") {
-                NSApp.sendAction(#selector(NSResponder.newWindow(_:)), to: nil, from: nil)
+                NSApp.sendAction(Selector(("newWindowForTab:")), to: nil, from: nil)
             }
             .keyboardShortcut("n", modifiers: [.command, .shift])
         }

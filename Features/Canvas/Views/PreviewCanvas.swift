@@ -25,7 +25,7 @@ struct PreviewCanvas: View {
                 }
             }
         }
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
     }
     
     // MARK: - Header
@@ -85,7 +85,7 @@ struct PreviewCanvas: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(.secondarySystemBackground))
+        .background(Color.secondarySystemBackground)
     }
     
     // MARK: - Preview Content
@@ -253,12 +253,12 @@ struct MarkdownPreviewView: View {
     
     var body: some View {
         ScrollView {
-            MarkdownContentView(content: markdown)
+            MarkdownContentView(content: markdown, isAssistant: true)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 20)
                 .scaleEffect(zoomLevel)
         }
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
     }
 }
 
@@ -275,7 +275,7 @@ struct CodePreviewView: View {
                 // Line numbers
                 lineNumbers
                     .frame(width: 50 * zoomLevel)
-                    .background(Color(.secondarySystemBackground).opacity(0.5))
+                    .background(Color.secondarySystemBackground.opacity(0.5))
                 
                 // Code
                 Text(code)
@@ -286,7 +286,7 @@ struct CodePreviewView: View {
                     .textSelection(.enabled)
             }
         }
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
     }
     
     private var lineNumbers: some View {

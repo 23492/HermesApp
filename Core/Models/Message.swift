@@ -84,7 +84,7 @@ final class Message {
         set {
             Self.lock.lock()
             defer { Self.lock.unlock() }
-            toolCallsData = newValue.map { try? Self.encoder.encode($0) }
+            toolCallsData = newValue.flatMap { try? Self.encoder.encode($0) }
         }
     }
     
@@ -98,7 +98,7 @@ final class Message {
         set {
             Self.lock.lock()
             defer { Self.lock.unlock() }
-            toolResultsData = newValue.map { try? Self.encoder.encode($0) }
+            toolResultsData = newValue.flatMap { try? Self.encoder.encode($0) }
         }
     }
     
@@ -112,7 +112,7 @@ final class Message {
         set {
             Self.lock.lock()
             defer { Self.lock.unlock() }
-            activeToolData = newValue.map { try? Self.encoder.encode($0) }
+            activeToolData = newValue.flatMap { try? Self.encoder.encode($0) }
         }
     }
     

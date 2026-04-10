@@ -1,13 +1,6 @@
 import SwiftUI
 import MarkdownUI
 
-// Make Log available if not already imported
-private struct Log {
-    static func error(_ message: String) {
-        print("[ERROR] \(message)")
-    }
-}
-
 // MARK: - Message Bubble View
 
 struct MessageBubble: View {
@@ -27,135 +20,18 @@ struct MessageBubble: View {
             if message.role == .user {
                 Spacer()
             }
-            
+
             VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 8) {
-                // Reasoning content (if present and enabled)
-                if let reasoning = message.reasoningContent,
-                   !reasoning.isEmpty,
-                   appState.showThinking {
-                    ThinkingBlock(
-                        reasoning: reasoning,
-                        isExpanded: $message.isReasoningExpanded,
-                        isStreaming: message.isStreaming
-                    )
-                }
-                
-                // Tool execution indicator (for active/running tools)
-                if let activeTool = message.activeTool, message.isStreaming {
-                    ToolExecutionView(tool: activeTool, style: .compact)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .top).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                }
-                
-                // Tool calls list with results
-                if let toolCalls = message.toolCalls, !toolCalls.isEmpty {
-                    ToolCallListView(
-                        toolCalls: toolCalls,
-                        toolResults: message.toolResults
-                    )
-                }
-                
-                // Tool results summary (if completed)
-                if let toolResults = message.toolResults, !toolResults.isEmpty && !message.isStreaming {
-                    ToolResultsSummary(results: toolResults)
-                }
-                
-                // Message content
-                if !message.content.isEmpty {
-                    if isEditing && message.role == .user {
-                        // Edit mode for user messages
-                        MessageEditView(
-                            content: $editedContent,
-                            onSave: saveEdit,
-                            onCancel: { isEditing = false }
-                        )
-                    } else {
-                        MessageContent(
-                            text: message.content,
-                            role: message.role,
-                            showActions: $showActions
-                        )
-                        .padding(12)
-                        .background(backgroundColor)
-                        .foregroundColor(foregroundColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(borderColor, lineWidth: showActions ? 2 : 0)
-                                .animation(.easeInOut(duration: 0.2), value: showActions)
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation {
-                                showActions.toggle()
-                            }
-                        }
-                        .onLongPressGesture {
-                            withAnimation {
-                                showActions = true
-                            }
-                        }
-                    }
-                }
-                
-                // Message actions
-                if showActions && !isEditing {
-                    MessageActionsBar(
-                        message: message,
-                        onCopy: copyMessage,
-                        onRegenerate: regenerateMessage,
-                        onEdit: startEditing,
-                        onCopyCodeToCanvas: hasCodeBlocks ? copyCodeToCanvas : nil,
-                        onDismiss: { showActions = false }
-                    )
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-                
-                // Streaming indicator
-                if message.isStreaming && message.content.isEmpty {
-                    TypingIndicator()
-                        .padding(12)
-                        .background(backgroundColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                
-                // Pending question
-                if let question = message.pendingQuestion, !question.isEmpty {
-                    InlineQuestionView(
-                        question: AskUserQuestion(
-                            question: question,
-                            questionType: .text
-                        ),
-                        onSubmit: { response in
-                            // Post notification for view model to handle
-                            NotificationCenter.default.post(
-                                name: .submitQuestionResponse,
-                                object: nil,
-                                userInfo: ["response": response]
-                            )
-                        }
-                    )
-                }
-                
-                // Timestamp and status
-                HStack(spacing: 6) {
-                    Text(formattedTime(message.createdAt))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    
-                    if message.isStreaming {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .symbolEffect(.pulse)
-                    }
-                }
-                .padding(.horizontal, 4)
+                reasoningSection
+                toolSection
+                contentSection
+                actionsSection
+                streamingSection
+                questionSection
+                timestampSection
             }
-            .frame(maxWidth: min(UIScreen.main.bounds.width * 0.85, 700), alignment: message.role == .user ? .trailing : .leading)
-            
+            .frame(maxWidth: 700, alignment: message.role == .user ? .trailing : .leading)
+
             if message.role == .assistant || message.role == .system {
                 Spacer()
             }
@@ -164,13 +40,151 @@ struct MessageBubble: View {
             editedContent = message.content
         }
     }
+
+    @ViewBuilder
+    private var reasoningSection: some View {
+        if let reasoning = message.reasoningContent,
+           !reasoning.isEmpty,
+           appState.showThinking {
+            ThinkingBlock(
+                reasoning: reasoning,
+                isExpanded: Binding(
+                    get: { message.isReasoningExpanded },
+                    set: { message.isReasoningExpanded = $0 }
+                ),
+                isStreaming: message.isStreaming
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var toolSection: some View {
+        if let activeTool = message.activeTool, message.isStreaming {
+            ToolExecutionView(tool: activeTool, style: .compact)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .top).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+        }
+
+        if let toolCalls = message.toolCalls, !toolCalls.isEmpty {
+            ToolCallListView(
+                toolCalls: toolCalls,
+                toolResults: message.toolResults
+            )
+        }
+
+        if let toolResults = message.toolResults, !toolResults.isEmpty && !message.isStreaming {
+            ToolResultsSummary(results: toolResults)
+        }
+    }
+
+    @ViewBuilder
+    private var contentSection: some View {
+        if !message.content.isEmpty {
+            if isEditing && message.role == .user {
+                MessageEditView(
+                    content: $editedContent,
+                    onSave: saveEdit,
+                    onCancel: { isEditing = false }
+                )
+            } else {
+                MessageContent(
+                    text: message.content,
+                    role: message.role,
+                    showActions: $showActions
+                )
+                .padding(12)
+                .background(backgroundColor)
+                .foregroundColor(foregroundColor)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(borderColor, lineWidth: showActions ? 2 : 0)
+                        .animation(.easeInOut(duration: 0.2), value: showActions)
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation {
+                        showActions.toggle()
+                    }
+                }
+                .onLongPressGesture {
+                    withAnimation {
+                        showActions = true
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var actionsSection: some View {
+        if showActions && !isEditing {
+            let canvasAction: (() -> Void)? = hasCodeBlocks ? { copyCodeToCanvas() } : nil
+            MessageActionsBar(
+                message: message,
+                onCopy: copyMessage,
+                onRegenerate: regenerateMessage,
+                onEdit: startEditing,
+                onCopyCodeToCanvas: canvasAction,
+                onDismiss: { showActions = false }
+            )
+            .transition(.opacity.combined(with: .move(edge: .top)))
+        }
+    }
+
+    @ViewBuilder
+    private var streamingSection: some View {
+        if message.isStreaming && message.content.isEmpty {
+            TypingIndicator()
+                .padding(12)
+                .background(backgroundColor)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    @ViewBuilder
+    private var questionSection: some View {
+        if let question = message.pendingQuestion, !question.isEmpty {
+            InlineQuestionView(
+                question: AskUserQuestion(
+                    question: question,
+                    questionType: .text
+                ),
+                onSubmit: { response in
+                    NotificationCenter.default.post(
+                        name: .submitQuestionResponse,
+                        object: nil,
+                        userInfo: ["response": response]
+                    )
+                }
+            )
+        }
+    }
+
+    private var timestampSection: some View {
+        HStack(spacing: 6) {
+            Text(formattedTime(message.createdAt))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            if message.isStreaming {
+                Image(systemName: "ellipsis.circle")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .symbolEffect(.pulse)
+            }
+        }
+        .padding(.horizontal, 4)
+    }
     
     private var backgroundColor: Color {
         switch message.role {
         case .user:
             return Color.accentColor
         case .assistant:
-            return Color(.systemGray6)
+            return Color.systemGray6
         case .system:
             return Color.yellow.opacity(0.2)
         case .tool:
@@ -327,116 +341,9 @@ struct MessageContent: View {
 
 struct MarkdownContentRenderer: View {
     let content: String
-    
-    @Environment(\.colorScheme) private var colorScheme
-    
+
     var body: some View {
-        Markdown(content)
-            .markdownTheme(markdownTheme)
-            .markdownCodeSyntaxHighlighter(
-                SplashCodeSyntaxHighlighter(theme: colorScheme == .dark ? .wwdc17(withFont: .init(size: 14)) : .sunset(withFont: .init(size: 14)))
-            )
-    }
-    
-    private var markdownTheme: Theme {
-        let textColor = Color.primary
-        let secondaryColor = Color.secondary
-        let codeBackground = Color(.systemGray5)
-        
-        return Theme()
-            .text {
-                ForegroundColor(textColor)
-                FontSize(16)
-            }
-            .code {
-                FontFamilyVariant(.monospaced)
-                FontSize(14)
-                BackgroundColor(codeBackground)
-                ForegroundColor(textColor)
-            }
-            .codeBlock { configuration in
-                CodeBlockView(
-                    code: configuration.content,
-                    language: configuration.language
-                )
-            }
-            .strong {
-                FontWeight(.bold)
-            }
-            .emphasis {
-                FontStyle(.italic)
-            }
-            .strikethrough {
-                StrikethroughStyle(.single)
-            }
-            .heading1 {
-                FontWeight(.bold)
-                FontSize(24)
-                Padding(.bottom, 8)
-            }
-            .heading2 {
-                FontWeight(.bold)
-                FontSize(20)
-                Padding(.bottom, 6)
-            }
-            .heading3 {
-                FontWeight(.semibold)
-                FontSize(18)
-                Padding(.bottom, 4)
-            }
-            .heading4 {
-                FontWeight(.semibold)
-                FontSize(16)
-            }
-            .heading5 {
-                FontWeight(.medium)
-                FontSize(15)
-            }
-            .heading6 {
-                FontWeight(.medium)
-                FontSize(14)
-                ForegroundColor(secondaryColor)
-            }
-            .paragraph {
-                Padding(.vertical, 4)
-            }
-            .unorderedList {
-                Margin(.bottom, 8)
-            }
-            .orderedList {
-                Margin(.bottom, 8)
-            }
-            .listItem {
-                MarkerStyle {
-                    ForegroundColor(textColor)
-                }
-            }
-            .blockquote {
-                Padding(.horizontal, 16)
-                Padding(.vertical, 8)
-                Margin(.vertical, 8)
-                Border(.leading, width: 4, color: secondaryColor.opacity(0.5))
-                BackgroundColor(codeBackground.opacity(0.5))
-            }
-            .link {
-                ForegroundColor(.accentColor)
-            }
-            .table {
-                Margin(.vertical, 8)
-            }
-            .tableCell {
-                Padding(.horizontal, 8)
-                Padding(.vertical, 4)
-                Border(.bottom, width: 0.5, color: secondaryColor.opacity(0.3))
-            }
-            .tableHeader {
-                FontWeight(.bold)
-                Border(.bottom, width: 1, color: textColor.opacity(0.5))
-            }
-            .thematicBreak {
-                Margin(.vertical, 16)
-                Border(.top, width: 1, color: secondaryColor.opacity(0.3))
-            }
+        MarkdownRenderer(content: content, theme: .default)
     }
 }
 
@@ -504,15 +411,24 @@ struct MessageActionsBar: View {
             HStack(spacing: 12) {
                 // Show/Hide thinking button
                 if let reasoning = message.reasoningContent, !reasoning.isEmpty {
-                    ThinkingToggleButton(
-                        isExpanded: Binding(
-                            get: { message.isReasoningExpanded },
-                            set: { newValue in
-                                message.isReasoningExpanded = newValue
-                            }
-                        ),
-                        hasReasoning: true
-                    )
+                    Button {
+                        withAnimation {
+                            message.isReasoningExpanded.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: message.isReasoningExpanded ? "brain.head.profile" : "brain.head.profile")
+                                .font(.caption)
+                            Text(message.isReasoningExpanded ? "Hide thinking" : "Show thinking")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.orange.opacity(0.1))
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
                 }
                 
                 // Global show thinking toggle (for app setting)
@@ -586,7 +502,7 @@ struct MessageEditView: View {
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .frame(minHeight: 60, maxHeight: 200)
-                .background(Color(.systemBackground))
+                .background(Color.systemBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -696,9 +612,11 @@ extension Color {
             This creates a simple view that displays text.
             """))
             
-            let toolMessage = Message(role: .assistant, content: "Let me search for that information.")
-            toolMessage.activeTool = ActiveTool(name: "web_search", status: .running, preview: "Searching...", startTime: Date())
-            MessageBubble(message: toolMessage)
+            MessageBubble(message: {
+                let msg = Message(role: .assistant, content: "Let me search for that information.")
+                msg.activeTool = ActiveTool(name: "web_search", status: .running, preview: "Searching...", startTime: Date())
+                return msg
+            }())
         }
         .padding()
     }

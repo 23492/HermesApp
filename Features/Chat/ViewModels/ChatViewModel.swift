@@ -42,7 +42,7 @@ final class ChatViewModel: ObservableObject {
     
     // MARK: - Initialization
     
-    private var cancellables: Set<AnyCancellable> = []
+    nonisolated(unsafe) private var cancellables: Set<AnyCancellable> = []
     
     init(
         conversation: Conversation,
@@ -64,8 +64,9 @@ final class ChatViewModel: ObservableObject {
     
     deinit {
         streamingTask?.cancel()
-        Task {
-            await cancellationToken.cancel()
+        let token = cancellationToken
+        Task { [token] in
+            await token.cancel()
         }
         cancellables.removeAll()
     }

@@ -144,7 +144,7 @@ struct ToolCallView: View {
                 .fontDesign(.monospaced)
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemGray5))
+                .background(Color.systemGray5)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .padding(.horizontal, 12)
@@ -282,7 +282,7 @@ struct ToolCallBadge: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 }
