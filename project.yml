@@ -1,0 +1,98 @@
+# XcodeGen project configuration for HermesApp
+# Usage: 
+#   1. Install XcodeGen: brew install xcodegen
+#   2. Run: xcodegen generate
+#   3. Open: open HermesApp.xcodeproj
+
+name: HermesApp
+targets:
+  HermesApp:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: App
+      - path: Core
+      - path: Features
+      - path: DesignSystem
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.kiran.hermesapp
+      SWIFT_VERSION: "6.0"
+      GENERATE_INFOPLIST_FILE: YES
+      ENABLE_USER_SCRIPT_SANDBOXING: NO
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Hermes
+        LSMinimumSystemVersion: "14.0"
+        NSHighResolutionCapable: YES
+    dependencies:
+      - package: MarkdownUI
+      - package: Splash
+    scheme:
+      testTargets: []
+      configVariants:
+        - Debug
+        - Release
+
+# Platform variants for iOS
+  HermesAppiOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: App
+      - path: Core
+      - path: Features
+      - path: DesignSystem
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.kiran.hermesapp.ios
+      SWIFT_VERSION: "6.0"
+      GENERATE_INFOPLIST_FILE: YES
+      ENABLE_USER_SCRIPT_SANDBOXING: NO
+    info:
+      path: App/Info-iOS.plist
+      properties:
+        CFBundleDisplayName: Hermes
+        UILaunchStoryboardName: LaunchScreen
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: NO
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+    dependencies:
+      - package: MarkdownUI
+      - package: Splash
+
+packages:
+  MarkdownUI:
+    url: https://github.com/gonzalezreal/MarkdownUI
+    from: 2.4.1
+  Splash:
+    url: https://github.com/JohnSundell/Splash
+    from: 0.16.0
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_STRICT_CONCURRENCY: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+  configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+fileGroups:
+  - PLAN.md
+  - README.md
+
+options:
+  minimumXcodeGenVersion: "2.40.0"
+  generateEmptyDirectories: true
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
