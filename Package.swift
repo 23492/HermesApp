@@ -19,19 +19,22 @@ let package = Package(
         .package(url: "https://github.com/JohnSundell/Splash", from: "0.16.0"),
     ],
     targets: [
-        .target(
+        .executableTarget(
             name: "HermesApp",
             dependencies: [
                 .product(name: "MarkdownUI", package: "MarkdownUI"),
                 .product(name: "Splash", package: "Splash"),
             ],
+            path: ".",
+            exclude: ["Tests", "README.md", "PROJECT_SUMMARY.md", "PHASE2_CODE_REVIEW.md", "PHASE2_FIXES.patch", "PLAN.md", "Info.plist"],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "HermesAppTests",
-            dependencies: ["HermesApp"]
+            dependencies: ["HermesApp"],
+            path: "Tests"
         ),
     ]
 )
