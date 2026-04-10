@@ -2,168 +2,333 @@
 
 A native SwiftUI iOS/macOS chat application for the Hermes AI agent API.
 
-## Features
+![Platforms](https://img.shields.io/badge/platform-iOS%2017+%20%7C%20macOS%2014+-blue)
+![Swift](https://img.shields.io/badge/swift-6.0-orange)
+![SwiftUI](https://img.shields.io/badge/SwiftUI-5.0-green)
 
-### Phase 1 (Current)
-- ✅ **Universal iOS/macOS app** - iOS 17.0+, macOS 14.0+
-- ✅ **SwiftData persistence** - Local conversation history
-- ✅ **OpenAI-compatible API** - Chat completions with streaming
-- ✅ **SSE streaming** - Real-time response streaming via AsyncStream
-- ✅ **Tool calling support** - Display tool calls and execution status
-- ✅ **Session continuity** - X-Hermes-Session-Id header support
-- ✅ **Error handling** - Retry logic with exponential backoff
-- ✅ **Settings management** - API configuration, appearance settings
+## Overview
 
-### Upcoming (Phase 2+)
-- Markdown rendering with syntax highlighting
-- Canvas support (Claude Desktop style)
-- Thinking/reasoning display
-- Ask User question handling
-- Voice input/output
-- Widgets & Shortcuts
+HermesApp is a modern, native chat client for the Hermes AI agent. Built with SwiftUI and Swift 6, it provides a seamless cross-platform experience on iOS and macOS with features rivaling web-based alternatives like OpenWebUI.
+
+### Key Features
+
+- **Real-time Streaming** - Server-Sent Events (SSE) for live response streaming
+- **Tool Calling Visualization** - Live display of tool execution with status indicators
+- **Reasoning Display** - Collapsible thinking blocks (Claude-style)
+- **Canvas Support** - Side-by-side code/document editing
+- **Ask User Questions** - Interactive prompts during AI tasks
+- **Offline History** - SwiftData persistence for conversations
+- **Universal App** - Single codebase for iOS 17+ and macOS 14+
+
+## Screenshots
+
+> Coming soon
+
+## Requirements
+
+- **iOS 17.0+** or **macOS 14.0+**
+- **Xcode 15.0+**
+- **Swift 6.0**
+- Hermes API server running locally or remotely
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/23492/HermesApp.git
+cd HermesApp
+```
+
+### 2. Open in Xcode
+
+```bash
+open Package.swift
+```
+
+Or open in Xcode directly and select **File → Open** → choose `Package.swift`.
+
+### 3. Build & Run
+
+Select your target (iOS Simulator or "My Mac") and press **Cmd+R**.
+
+### 4. Start Hermes API
+
+Ensure the Hermes API server is running:
+
+```bash
+hermes --api-server
+```
+
+Or via SSH tunnel if running on a remote server:
+
+```bash
+ssh -L 8642:localhost:8642 root@192.168.2.11
+```
 
 ## Architecture
 
 ### Project Structure
+
 ```
 HermesApp/
-├── App/                    # App entry point, state, DI
-│   ├── HermesApp.swift
-│   ├── AppState.swift
-│   ├── DIContainer.swift
-│   └── HermesCommands.swift (macOS)
-├── Core/
-│   ├── API/                # API client & models
+├── App/                        # App entry point & DI
+│   ├── HermesApp.swift         # @main app struct
+│   ├── AppState.swift          # Global state management
+│   ├── DIContainer.swift       # Dependency injection
+│   └── HermesCommands.swift    # macOS menu commands
+├── Core/                       # Core infrastructure
+│   ├── API/                    # API client
 │   │   ├── HermesAPIClient.swift
 │   │   └── Models.swift
-│   ├── Models/             # SwiftData models
+│   ├── Models/                 # SwiftData models
 │   │   ├── Conversation.swift
 │   │   ├── Message.swift
 │   │   └── ToolModels.swift
-│   ├── Persistence/        # SwiftData stack
+│   ├── Persistence/            # Data layer
 │   │   └── SwiftDataStack.swift
-│   ├── Networking/         # (Future extensions)
-│   └── Utils/              # Utilities
+│   └── Utils/                  # Extensions & helpers
 │       ├── Extensions.swift
 │       └── Logger.swift
-├── Features/
-│   └── Chat/
-│       ├── Models/
-│       ├── Views/          # SwiftUI views
-│       │   ├── ContentView.swift
-│       │   ├── ChatView.swift
-│       │   ├── ConversationListView.swift
-│       │   ├── MessageBubbleView.swift
-│       │   └── MessageInputView.swift
-│       ├── ViewModels/     # Observable view models
-│       │   ├── ChatViewModel.swift
-│       │   └── ConversationListViewModel.swift
-│       └── Services/
-├── DesignSystem/
+├── Features/                   # Feature modules
+│   ├── Chat/                   # Core chat feature
+│   │   ├── Views/
+│   │   ├── ViewModels/
+│   │   └── MarkdownComponents/
+│   ├── Canvas/                 # Side-by-side editing
+│   │   ├── Views/
+│   │   └── ViewModels/
+│   └── Settings/               # App settings
+├── DesignSystem/               # UI components
 │   ├── Components/
 │   └── Theme/
-└── Resources/
+└── Tests/                      # Unit tests
 ```
 
-### Key Components
+### Technology Stack
 
-#### API Client
-- `HermesAPIClient` - Actor-based API client with:
-  - OpenAI-compatible chat completions
-  - SSE streaming with `AsyncStream<ChatChunk>`
-  - Run-based events with `AsyncStream<RunEvent>`
-  - Automatic retry with exponential backoff
-  - Cancellation support via `CancellationToken`
+| Component | Technology |
+|-----------|------------|
+| UI Framework | SwiftUI |
+| Persistence | SwiftData |
+| Networking | URLSession + AsyncStream |
+| Markdown | MarkdownUI |
+| Syntax Highlighting | Splash |
+| Concurrency | Swift 6 Strict Concurrency |
 
-#### Models (SwiftData)
-- `Conversation` - Chat conversation container
-- `Message` - Individual messages with tool call support
-- `ToolCall`, `ToolResult`, `ActiveTool` - Tool execution tracking
+### API Client Architecture
 
-#### ViewModels
-- `@Observable` pattern for SwiftUI integration
-- Async/await for all operations
-- Proper error handling and state management
+The `HermesAPIClient` uses an actor-based design for thread-safe networking:
+
+```swift
+actor HermesAPIClient {
+    func sendMessage(_ request: ChatRequest) async throws -> AsyncStream<ChatChunk>
+    func streamRunEvents(runId: String) -> AsyncStream<RunEvent>
+}
+```
+
+**Key Features:**
+- SSE streaming via `URLSession.bytes`
+- Structured event types (message, tool, reasoning, canvas)
+- Automatic retry with exponential backoff
+- Cancellation support
 
 ## Configuration
 
-### API Endpoint
-Default: `http://localhost:8642/v1`
+### API Settings
 
-Configure in Settings or via UserDefaults:
-- `api.baseURL` - Base URL for Hermes API
-- `api.apiKey` - Optional API key
-- `api.timeout` - Request timeout (default: 60s)
-- `api.maxRetries` - Max retry attempts (default: 3)
+Configure in **Settings** (macOS) or via the app menu (iOS):
+
+| Setting | Key | Default |
+|---------|-----|---------|
+| Base URL | `api.baseURL` | `http://localhost:8642/v1` |
+| API Key | `api.apiKey` | (optional) |
+| Timeout | `api.timeout` | 60s |
+| Max Retries | `api.maxRetries` | 3 |
 
 ### UI Settings
-- `ui.theme` - Light/Dark/System
-- `ui.fontSize` - Message text size
-- `ui.showThinking` - Show AI reasoning
-- `ui.enableStreaming` - Enable response streaming
 
-## Usage
+| Setting | Key | Options |
+|---------|-----|---------|
+| Theme | `ui.theme` | Light / Dark / System |
+| Font Size | `ui.fontSize` | Small / Medium / Large |
+| Show Thinking | `ui.showThinking` | Bool |
+| Enable Streaming | `ui.enableStreaming` | Bool |
 
-### Starting Development
-```bash
-# 1. Open in Xcode
-open HermesApp.xcodeproj
+## Features
 
-# 2. Build and run (Cmd+R)
-# Select iPhone simulator or "My Mac" destination
+### 1. Chat Interface
+
+- Real-time message streaming
+- Markdown rendering with syntax highlighting
+- Message actions (copy, edit, regenerate)
+- Auto-resizing input with @mentions support
+- Conversation history with search
+
+### 2. Tool Calling
+
+Visual indicators for:
+- Terminal commands (bash, shell)
+- File operations (read, write, patch, search)
+- Web tools (search, extract)
+- Browser automation (navigate, click, type)
+- Code execution (Python, JavaScript)
+
+### 3. Reasoning Display
+
+Collapsible thinking blocks showing the AI's thought process:
+
+```swift
+ThinkingBlock(
+    reasoning: message.reasoningContent,
+    isExpanded: $message.isReasoningExpanded
+)
 ```
 
-### Hermes API Connection
-Ensure Hermes API is running:
-```bash
-hermes --api-server
-# or
-hermes -A
-```
+### 4. Canvas Support
 
-The app connects to `http://localhost:8642/v1` by default.
+Side-by-side editing for:
+- **CodeCanvas** - Code editing with line numbers and diff view
+- **DocumentCanvas** - Markdown editing
+- **PreviewCanvas** - Live HTML/Markdown preview
+
+Features:
+- Resizable split view
+- Apply/Discard actions
+- Multiple layout modes (side-by-side, stacked)
+
+### 5. Ask User Questions
+
+Interactive prompts during AI execution:
+- Text input questions
+- Confirm/Cancel dialogs
+- Multiple choice selection
+- Question history
 
 ## API Compatibility
 
 ### OpenAI-Compatible Endpoints
-- `POST /v1/chat/completions` - Streaming chat completions
-- `GET /v1/models` - List available models
 
-### Hermes-Specific Headers
-- `X-Hermes-Session-Id` - Conversation continuity
-
-### Streaming Format
-Server-Sent Events (SSE) with JSON chunks:
 ```
-data: {"id":"...","choices":[{"delta":{"content":"Hello"}}]}
-
-data: [DONE]
+POST /v1/chat/completions    # Streaming chat
+GET  /v1/models              # List models
 ```
 
-## Dependencies
+### Hermes-Specific Extensions
 
-**Phase 1**: Zero external dependencies
-- Native SwiftUI for UI
-- SwiftData for persistence
-- URLSession for networking
+```
+POST /v1/runs                # Start structured run
+GET  /v1/runs/{id}/events    # SSE event stream
+```
 
-**Future phases** may include:
-- Splash (syntax highlighting)
-- swift-markdown-ui (rich markdown)
+**Event Types:**
+- `message.delta` - Text chunks
+- `tool.started` / `tool.completed` - Tool lifecycle
+- `reasoning.available` - Thinking content
+- `ask_user.question` - User prompts
+- `canvas.update` - Canvas artifacts
 
-## Platform Support
+## Swift 6 Concurrency
 
-| Platform | Minimum Version | Status |
-|----------|----------------|--------|
-| iOS | 17.0 | ✅ Supported |
-| iPadOS | 17.0 | ✅ Supported |
-| macOS | 14.0 | ✅ Supported |
-| visionOS | 2.0 | 🔜 Planned |
+HermesApp is built with **Swift 6 strict concurrency** enabled:
 
-## License
+- `@MainActor` for UI components and ViewModels
+- `nonisolated(unsafe)` for deinit-accessible properties
+- Actor isolation for networking and persistence layers
+- Sendable conformance for data models
 
-MIT License - See LICENSE file for details.
+## Development
+
+### Building
+
+```bash
+swift build
+```
+
+### Testing
+
+```bash
+swift test
+```
+
+### Code Style
+
+- Follow Swift API Design Guidelines
+- Use `@MainActor` for UI-related code
+- Prefer `async/await` over completion handlers
+- Document public APIs with Swift DocC comments
+
+## Troubleshooting
+
+### Build Errors
+
+**"target 'HermesApp' referenced in product 'HermesApp' is empty"**
+
+The Package.swift uses `path: "."` to include all source files. Ensure you're opening `Package.swift` directly in Xcode, not generating an Xcode project.
+
+**Swift Compiler Crashes**
+
+Complex view bodies may cause stack overflow. Split into `@ViewBuilder` computed properties:
+
+```swift
+var body: some View {
+    VStack {
+        headerSection
+        contentSection
+        footerSection
+    }
+}
+
+@ViewBuilder
+private var headerSection: some View { ... }
+```
+
+### Runtime Issues
+
+**"Cannot access cancellables from non-isolated deinit"**
+
+Mark cancellables as `nonisolated(unsafe)`:
+
+```swift
+@MainActor
+class ViewModel: ObservableObject {
+    nonisolated(unsafe) var cancellables = Set<AnyCancellable>()
+}
+```
+
+**API Connection Errors**
+
+Verify Hermes API is running:
+```bash
+curl http://localhost:8642/v1/models
+```
+
+## Roadmap
+
+- [ ] Voice input/output
+- [ ] iOS Home Screen widgets
+- [ ] Siri Shortcuts integration
+- [ ] visionOS support
+- [ ] iCloud sync for conversations
 
 ## Contributing
 
-This is part of the Hermes AI agent project. Contributions welcome!
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## License
+
+MIT License - See [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [MarkdownUI](https://github.com/gonzalezreal/MarkdownUI) - Markdown rendering
+- [Splash](https://github.com/JohnSundell/Splash) - Syntax highlighting
+- [Hermes Agent](https://github.com/NousResearch/hermes-agent) - Backend API
+
+---
+
+**Note:** This project is part of the Hermes AI agent ecosystem. For backend documentation, see the [Hermes Agent repository](https://github.com/NousResearch/hermes-agent).
